@@ -9,7 +9,7 @@ enum vehicleType
     ev
 };
 const char *vehicleTypeS[] = {"petrol", "diesel", "ev"};
-class vehicle
+class Vehicle
 {
 public:
     vehicleType vehicletype;
@@ -18,7 +18,7 @@ public:
     string color;
     float mileage;
     int price;
-    vehicle(vehicleType type, string brand, string model, string color, float mileage, int price)
+    Vehicle(vehicleType type, string brand, string model, string color, float mileage, int price)
     {
         this->vehicletype = type;
         this->brand = brand;
@@ -28,20 +28,20 @@ public:
         this->price = price;
     }
     virtual int getNoOfWheels() = 0;
-    friend ostream &operator<<(ostream &print, const vehicle &vehicle_ad)  //Operator overloading
+    friend ostream &operator<<(ostream &print, const Vehicle &vehicle)  //Operator overloading
     {
-        print << "Vehicle Type: " << vehicleTypeS[vehicle_ad.vehicletype] << endl;
-        print << "Brand: " << vehicle_ad.brand << endl;
-        print << "Model: " << vehicle_ad.model << endl;
-        print << "Color: " << vehicle_ad.color << endl;
-        print << "Price: " << vehicle_ad.price << endl;
+        print << "Vehicle Type: " << vehicleTypeS[vehicle.vehicletype] << endl;
+        print << "Brand: " << vehicle.brand << endl;
+        print << "Model: " << vehicle.model << endl;
+        print << "Color: " << vehicle.color << endl;
+        print << "Price: " << vehicle.price << endl;
         return print;
     }
-    bool operator<(const vehicle &vehicle)
+    bool operator<(const Vehicle &vehicle)
     {
         return price < vehicle.price;
     }
-    bool operator>(const vehicle &vehicle)
+    bool operator>(const Vehicle &vehicle)
     {
         return price > vehicle.price;
     }
@@ -54,12 +54,12 @@ enum carType
     suv,
     sedan
 };
-class car : public vehicle
+class Car : public Vehicle
 {
 public:
     carType cartype;
     int noOfPersons;
-    car(vehicleType vehicletype, string brand, string model, string color, float mileage, int price, int noOfPersons, carType cartype) : vehicle(vehicletype, brand, model, color, mileage, price)
+    Car(vehicleType vehicletype, string brand, string model, string color, float mileage, int price, int noOfPersons, carType cartype) : Vehicle(vehicletype, brand, model, color, mileage, price)
     {
         this->noOfPersons = noOfPersons;
         this->cartype = cartype;
@@ -75,12 +75,12 @@ enum bikeType
     scooter,
     motorbike
 };
-class bike : public vehicle
+class Bike : public Vehicle
 {
 public:
     bikeType biketype;
     int weight;
-    bike(vehicleType vehicletype, string brand, string model, string color, float mileage, int price, int weight, bikeType biketype) : vehicle(vehicletype, brand, model, color, mileage, price)
+    Bike(vehicleType vehicletype, string brand, string model, string color, float mileage, int price, int weight, bikeType biketype) : Vehicle(vehicletype, brand, model, color, mileage, price)
     {
         this->weight = weight;
         this->biketype = biketype;
@@ -94,8 +94,8 @@ public:
 
 int main()
 {
-    car c1(diesel, "Honda", "City", "Black", 25, 1200000, 200000, suv);
-    bike b1(petrol, "Honda", "cb-twister", "Red", 80, 80000, 100, motorbike);
+    Car c1(diesel, "Honda", "City", "Black", 25, 1200000, 200000, suv);
+    Bike b1(petrol, "Honda", "cb-twister", "Red", 80, 80000, 100, motorbike);
     //Using operator overloading (<<) to display, brand, model, type, color, price.
     cout << "Car Information:- \n" << c1 <<endl;
     cout << "Bike Information:- \n" << b1 <<endl;
@@ -123,5 +123,4 @@ int main()
     }
     return 0;
 }
-
 
