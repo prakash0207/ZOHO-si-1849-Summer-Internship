@@ -15,7 +15,13 @@ public:
     }
     virtual string getName() = 0;               // Virtual Methods for overriding
     virtual string getEstablishedDate() = 0;    // Virtual Methods for overriding
-    virtual void getInfo() = 0;                 // Virtual Methods for overriding
+    void getInfo()
+    {
+        cout<<"Name :" <<name << endl;
+        cout<<"Established Date :" <<establishedDate << endl;
+        cout<<"bank Type :" <<bankType << endl;
+        cout<<"Branch Name :" <<branchName << endl;
+    }
 };
 
 //We should have two Base/Parent class named Loan
@@ -49,13 +55,6 @@ public:
     {
         return establishedDate;
     }
-    void getInfo()  //Method Overriden
-    {
-        cout<<"Name :" <<name << endl;
-        cout<<"Established Date :" <<establishedDate << endl;
-        cout<<"bank Type :" <<bankType << endl;
-        cout<<"Branch Name :" <<branchName << endl;
-    }
 
     string getAvailableLoan()   //Method Overriden
     {
@@ -86,13 +85,6 @@ public:
     {
         return establishedDate;
     }
-    void getInfo()
-    {
-        cout<<"Name :" <<name << endl;
-        cout<<"Established Date :" <<establishedDate << endl;
-        cout<<"bank Type :" <<bankType << endl;
-        cout<<"Branch Name :" <<branchName << endl;
-    }
 
     string getAvailableLoan()
     {
@@ -122,13 +114,6 @@ public:
     {
         return establishedDate;
     }
-    void getInfo()
-    {
-        cout<<"Name :" <<name << endl;
-        cout<<"Established Date :" <<establishedDate << endl;
-        cout<<"bank Type :" <<bankType << endl;
-        cout<<"Branch Name :" <<branchName << endl;
-    }
 
     string getAvailableLoan()
     {
@@ -157,13 +142,6 @@ public:
     string getEstablishedDate()
     {
         return establishedDate;
-    }
-    void getInfo()
-    {
-        cout<<"Name :" <<name << endl;
-        cout<<"Established Date :" <<establishedDate << endl;
-        cout<<"bank Type :" <<bankType << endl;
-        cout<<"Branch Name :" <<branchName << endl;
     }
 
     string getAvailableLoan()
@@ -223,6 +201,18 @@ public:
        }
        return mini;
     }
+    int minimum(int a[],int n)
+    {
+        int small = a[0];
+        for(int i=1;i<n;i++)
+        {
+            if(a[i]<small)
+            {
+                small = a[i];
+            }
+        }
+        return small;
+    }
 };
 
 int main()
@@ -234,20 +224,27 @@ int main()
 
     Broker b1;
     int mini;
-    int a,b,c,d;
-    a = bank1.getInterestRate();
-    b = bank2.getInterestRate();
-    c = bank3.getInterestRate();
-    d = bank4.getInterestRate();
+    int interestRateArray[4];
+    int nVal;
+    interestRateArray[0] = bank1.getInterestRate();
+    interestRateArray[1] = bank2.getInterestRate();
+    interestRateArray[2] = bank3.getInterestRate();
+    interestRateArray[3] = bank4.getInterestRate();
 
-    mini = b1.minimum(a,b,c,d);     //Compare Bank Interest rate and Display the bank which has low interest rate
+    mini = b1.minimum(interestRateArray[0],interestRateArray[1],interestRateArray[2],interestRateArray[3]);     //Compare Bank Interest rate and Display the bank which has low interest rate
     cout<<"Lowest Interest rate among the 4 banks is: " << mini <<endl;
 
-    mini = b1.minimum(b,c,d);       //Compare three banks loan rates
+    mini = b1.minimum(interestRateArray[1],interestRateArray[2],interestRateArray[3]);       //Compare three banks loan rates
     cout<<"Lowest Interest rate among the 3 banks is: " << mini <<endl;
 
-    mini = b1.minimum(c,b);         //Compare two banks loan rates
+    mini = b1.minimum(interestRateArray[1],interestRateArray[0]);         //Compare two banks loan rates
     cout<<"Lowest Interest rate among the 2 banks is: " << mini <<endl;
+
+    cout<<"Enter n banks to be compared: ";
+    cin>>nVal;
+
+    mini = b1.minimum(interestRateArray,nVal);      //Compare n banks with an array parameter.
+    cout<<"Lowest Interest rate among "<<nVal<<" banks is: "<<mini<<endl;
 
     //1. Print the Details of single bank
     cout<<endl;
