@@ -2,21 +2,29 @@
 #include<cstdio>
 #include<vector>
 #include <functional>
+typedef std::function<void()> f_t;
 using namespace std;
 void displayOptions();
 
+enum deviceType
+{
+    temperature,
+    motion,
+    water,
+    gas,
+    fan,
+    light,
+    door
+};
 
-//Every Sensors and devices as Class
-class TemperatureSensor
+const char *deviceTypeString[] = {"temperature","motion","water","gas","fan","light","door"};
+
+class Device
 {
 public:
-    bool status;
-    int val;
-    TemperatureSensor(bool st, int v)
-    {
-        status = st;
-        val = v;
-    }
+    deviceType devicetype;
+    bool status=false;
+    int val=0;
     void onConnect()
     {
         status = true;
@@ -24,6 +32,14 @@ public:
     void onDisconnect()
     {
         status = false;
+    }
+    bool getStatus()
+    {
+        return status;
+    }
+    int getVal()
+    {
+        return val;
     }
     void increaseVal()
     {
@@ -33,157 +49,27 @@ public:
     {
         val -= 1;
     }
-};
-
-
-class MotionSensor
-{
-public:
-     bool status, val;
-    MotionSensor(bool st,bool val)
+    void putDeviceType(deviceType dt)
     {
-        status = st;
-    }
-    void onConnect()
-    {
-        status = true;
-    }
-    void onDisconnect()
-    {
-        status = false;
-    }
-    void detect()
-    {
-        val = true;
-    }
-    void notDetect()
-    {
-        val = false;
+        devicetype = dt;
     }
 };
 
-class WaterLevelSensor
-{
-public:
-     bool status;
-    int val;
-    WaterLevelSensor(bool st, int v)
-    {
-        status = st;
-        val = v;
-    }
-    void onConnect()
-    {
-        status = true;
-    }
-    void onDisconnect()
-    {
-        status = false;
-    }
-    void increaseVal()
-    {
-        val += 1;
-    }
-    void DecreaseVal()
-    {
-        val -= 1;
-    }
-};
-
-class GasDetectionSensor
-{
-public:
-    bool status,val;
-    GasDetectionSensor(bool st, bool v)
-    {
-        status = st;
-        val = v;
-    }
-    void onConnect()
-    {
-        status = true;
-    }
-    void onDisconnect()
-    {
-        status = false;
-    }
-    void increaseVal()
-    {
-        val += 1;
-    }
-    void DecreaseVal()
-    {
-        val -= 1;
-    }
-};
-
-class Fan
-{
-public:
-     bool status;
-    Fan(bool st)
-    {
-        status = st;
-    }
-    void onConnect()
-    {
-        status = true;
-    }
-    void onDisconnect()
-    {
-        status = false;
-    }
-};
-
-class Light
-{
-public:
-     bool status;
-    Light(bool st)
-    {
-        status = st;
-    }
-    void onConnect()
-    {
-        status = true;
-    }
-    void onDisconnect()
-    {
-        status = false;
-    }
-};
-
-class Door
-{
-public:
-    bool status;
-    Door(bool st)
-    {
-        status = st;
-    }
-    void onConnect()
-    {
-        status = true;
-    }
-    void onDisconnect()
-    {
-        status = false;
-    }
-};
 
 
 int main()
 {
-    TemperatureSensor ts(true,22);
-    MotionSensor ms(true, false);
-    WaterLevelSensor ws(true, 5);
-    GasDetectionSensor gs(true,false);
-    Fan fob(false);
-    Light lob(false);
-    Door dob(false);
+    Device *d = new Device[7];
     int val;
     int status;
     int choice;
+    d[0].putDeviceType(temperature);
+    d[1].putDeviceType(motion);
+    d[2].putDeviceType(water);
+    d[3].putDeviceType(gas);
+    d[4].putDeviceType(fan);
+    d[5].putDeviceType(light);
+    d[6].putDeviceType(door);
 
 
     do
@@ -196,8 +82,8 @@ int main()
         cin>>choice;
         if(choice == 1)                         //To do all the changes in the value and status of sensors and devices manually
         {
-            int choice;
-            int choice_sim;
+            int choiceSensorSelection;
+            int choiceSensorConfiguration;
             do
             {
                 cout<<"1)Temperature Sensor"<<endl;
@@ -208,92 +94,23 @@ int main()
                 cout<<"6)Light"<<endl;
                 cout<<"7)Door"<<endl;
                 cout<<"8)Quit"<<endl;
-                cin>>choice;
-                if(choice == 1)
-                {
-                    displayOptions();
-                    cin>>choice_sim;
-                    if(choice_sim==1)
-                        ts.increaseVal();
-                    if(choice_sim==2)
-                        ts.DecreaseVal();
-                    if(choice_sim==3)
-                        ts.onConnect();
-                    if(choice_sim==4)
-                        ts.onDisconnect();
-                }
-                if(choice == 2)
-                {
-                    displayOptions();
-                    cin>>choice_sim;
-                    if(choice_sim==1)
-                        ms.detect();
-                    if(choice_sim==2)
-                        ms.notDetect();
-                    if(choice_sim==3)
-                        ms.onConnect();
-                    if(choice_sim==4)
-                        ms.onDisconnect();
-                }
-                if(choice == 3)
-                {
-                    displayOptions();
-                    cin>>choice_sim;
-                    if(choice_sim==1)
-                        ws.increaseVal();
-                    if(choice_sim==2)
-                        ws.DecreaseVal();
-                    if(choice_sim==3)
-                        ws.onConnect();
-                    if(choice_sim==4)
-                        ws.onDisconnect();
-                }
-                if(choice == 4)
-                {
-                    displayOptions();
-                    cin>>choice_sim;
-                    if(choice_sim==1)
-                        gs.increaseVal();
-                    if(choice_sim==2)
-                        gs.DecreaseVal();
-                    if(choice_sim==3)
-                        gs.onConnect();
-                    if(choice_sim==4)
-                        gs.onDisconnect();
-                }
-                if(choice == 5)
-                {
-                    cout<<"1)On"<<endl;
-                    cout<<"1)Off"<<endl;
-                    cin>>choice_sim;
-                    if(choice_sim==1)
-                        fob.onConnect();
-                    if(choice_sim==2)
-                        fob.onDisconnect();
-                }
-                if(choice == 6)
-                {
-                    cout<<"1)On"<<endl;
-                    cout<<"1)Off"<<endl;
-                    cin>>choice_sim;
-                    if(choice_sim==1)
-                        lob.onConnect();
-                    if(choice_sim==1)
-                        lob.onDisconnect();
+                cin>>choiceSensorSelection;
 
-                }
-                if(choice == 7)
+                if(choiceSensorSelection != 8)
                 {
-                    cin>>choice_sim;
-                    cout<<"1)Open"<<endl;
-                    cout<<"1)Close"<<endl;
-                    if(choice_sim==1)
-                        dob.onConnect();
-                    if(choice_sim==1)
-                        dob.onDisconnect();
+                    displayOptions();
+                    cin>>choiceSensorConfiguration;
+                    if(choiceSensorConfiguration==1)
+                        d[choiceSensorSelection-1].increaseVal();
+                    if(choiceSensorConfiguration==2)
+                        d[choiceSensorSelection-1].DecreaseVal();
+                    if(choiceSensorConfiguration==3)
+                        d[choiceSensorSelection-1].onConnect();
+                    if(choiceSensorConfiguration==4)
+                        d[choiceSensorSelection-1].onDisconnect();
                 }
             }
-            while(choice!=8);
+            while(choiceSensorSelection!=8);
         }
 
         if(choice == 2)                     //To do all the changes in the value and status of sensors and devices Automatically
@@ -332,164 +149,134 @@ int main()
             ifSyntax.push_back(str1);
             ifSyntax.push_back(str2);
 
-          //  auto Checker = [&]()     == Normal lambda function
-            //store them in vectors of std::function for >,<,= conditions and fire them when activated by keypress and the conditions given in the automation menu is met.
-            std::function<void()> Checker = [&]()       //Lambda Function: To check the automatic conditions with std :: function
+            //Lambda function to for less than condition
+            auto checkerForLessthan = [&]()
     		{
-    		    if(ifSyntax[0]=="temperature")
+    		    if(ifSyntax[1]== "<" )
     		    {
-    		        if(ifSyntax[1]=="<" && ts.val<valueToChange)
+    		        for(int j=0;j<7;j++)
                     {
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
-                            fob.onConnect();
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
-                            fob.onDisconnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
-                            lob.onConnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
-                            lob.onDisconnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
-                            dob.onConnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
-                            dob.onDisconnect();
+                       if(ifSyntax[0] == deviceTypeString[d[j].devicetype])
+                       {
+                           if(d[j].getVal()<valueToChange)
+                           {
+                                if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
+                                    d[4].onConnect();
+                                if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
+                                    d[4].onDisconnect();
+                                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
+                                    d[5].onConnect();
+                                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
+                                    d[5].onDisconnect();
+                                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
+                                    d[6].onConnect();
+                                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
+                                    d[6].onDisconnect();
+                           }
+                       }
                     }
-                    if(ifSyntax[1]==">" && ts.val>valueToChange)
-                    {
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
-                            fob.onConnect();
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
-                            fob.onDisconnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
-                            lob.onConnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
-                            lob.onDisconnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
-                            dob.onConnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
-                            dob.onDisconnect();
-                    }
-                    if(ifSyntax[1]=="=" && ts.val==valueToChange)
-                    {
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
-                            fob.onConnect();
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
-                            fob.onDisconnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
-                            lob.onConnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
-                            lob.onDisconnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
-                            dob.onConnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
-                            dob.onDisconnect();
-                    }
-
     		    }
-                if(ifSyntax[0]=="motion")
-                {
 
-                    if(ifSyntax[1]=="=" && ms.val==valueToChange)
-                    {
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
-                            dob.onConnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
-                            fob.onDisconnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
-                            lob.onConnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
-                            lob.onDisconnect();
-                    }
-                }
-                if(ifSyntax[0]=="water")
+    		};
+    		//Lambda function for greater than condition
+    		auto checkerForGreaterthan = [&]()
+    		{
+    		    if(ifSyntax[1]== ">")
                 {
-                    if(ifSyntax[1]=="<" && ws.val<valueToChange)
+                    for(int j=0;j<7;j++)
                     {
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
-                            fob.onConnect();
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
-                            fob.onDisconnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
-                            lob.onConnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
-                            lob.onDisconnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
-                            dob.onConnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
-                            dob.onDisconnect();
-                    }
-                    if(ifSyntax[1]==">" && ws.val>valueToChange)
-                    {
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
-                            fob.onConnect();
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
-                            fob.onDisconnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
-                            lob.onConnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
-                            lob.onDisconnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
-                            dob.onConnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
-                            dob.onDisconnect();
-                    }
-                    if(ifSyntax[1]=="=" && ws.val==valueToChange)
-                    {
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
-                            fob.onConnect();
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
-                            fob.onDisconnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
-                            lob.onConnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
-                            lob.onDisconnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
-                            dob.onConnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
-                            dob.onDisconnect();
-                    }
-                }
-                if(ifSyntax[0]=="gas")
-                {
-                    if(ifSyntax[1]=="=" && gs.val==valueToChange)
-                    {
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
-                            dob.onConnect();
-                        if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
-                            fob.onDisconnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
-                            lob.onConnect();
-                        if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
-                            lob.onDisconnect();
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
-                            fob.onConnect();
-                        if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
-                            fob.onDisconnect();
+                       if(ifSyntax[0] == deviceTypeString[d[j].devicetype])
+                       {
+                           if(d[j].getVal()>valueToChange )
+                           {
+                               if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
+                                    d[4].onConnect();
+                                if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
+                                    d[4].onDisconnect();
+                                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
+                                    d[5].onConnect();
+                                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
+                                    d[5].onDisconnect();
+                                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
+                                    d[6].onConnect();
+                                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
+                                    d[6].onDisconnect();
+                           }
+                       }
                     }
                 }
     		};
-    		Checker();
+
+            //Lambda function for equal to condition
+    		auto checkerForEqual = [&]()
+    		{
+    		    if(ifSyntax[1]== "=")
+                {
+                    for(int j=0;j<7;j++)
+                    {
+                       if(ifSyntax[0] == deviceTypeString[d[j].devicetype])
+                       {
+                           if(d[j].getVal()==valueToChange)
+                           {
+                               if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
+                                    d[4].onConnect();
+                                if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
+                                    d[4].onDisconnect();
+                                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
+                                    d[5].onConnect();
+                                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
+                                    d[5].onDisconnect();
+                                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
+                                    d[6].onConnect();
+                                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
+                                    d[6].onDisconnect();
+                           }
+                       }
+                    }
+                }
+    		};
+
+
+
+
+
+
+
+
+            //The above conditioned lambda functions are stored in vector functions
+    		vector<f_t> *renderFunctions = new vector<f_t>;
+            f_t x = checkerForLessthan;
+            f_t y = checkerForGreaterthan;
+            f_t z = checkerForLessthan;
+            renderFunctions->push_back(x);
+            renderFunctions->push_back(y);
+            renderFunctions->push_back(z);
+            vector<f_t>::iterator it;
+            //Automatic Execution of all three while keypressed
+            for ( it = renderFunctions->begin() ; it != renderFunctions->end(); ++it )
+            {
+                (*it)();
+            }
+
         }
         if(choice == 3)
         {
             cout<<"If status 1 then On else Off"<<endl;
             cout<<"SENSORS        STATUS        Value"<<endl;
             cout<<"-------        ------        -----"<<endl;
-            cout<<"Temperature    "<<ts.status<<"             "<<ts.val<<endl;
-            cout<<"Motion         "<<ms.status<<"             "<<ms.val<<endl;
-            cout<<"Water          "<<ws.status<<"             "<<ws.val<<endl;
-            cout<<"Gas            "<<gs.status<<"             "<<gs.val<<endl;
+            cout<<"Temperature    "<<d[0].getStatus()<<"             "<<d[0].val<<endl;
+            cout<<"Motion         "<<d[1].getStatus()<<"             "<<d[1].val<<endl;
+            cout<<"Water          "<<d[2].getStatus()<<"             "<<d[2].val<<endl;
+            cout<<"Gas            "<<d[3].getStatus()<<"             "<<d[3].val<<endl;
             cout<<"---------------------------------------"<<endl;
             cout<<"DEVICES        STATUS"<<endl;
             cout<<"-------        ------"<<endl;
-            cout<<"Fan            "<<fob.status<<endl;
-            cout<<"Light          "<<lob.status<<endl;
-            cout<<"Door           "<<dob.status<<endl;
-
+            cout<<"Fan            "<<d[4].getStatus()<<endl;
+            cout<<"Light          "<<d[5].getStatus()<<endl;
+            cout<<"Door           "<<d[6].getStatus()<<endl;
         }
-
     }
     while(choice != 4);
-
 }
 
 
