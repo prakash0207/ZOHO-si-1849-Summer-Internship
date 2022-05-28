@@ -134,6 +134,7 @@ int main()
             str = s.c_str();
             sscanf(str,"%99s %c %d", stri1,&ch,&valueToChange);
             vector<string> ifSyntax ;                                                         //Vector is used for the syntax
+            vector<string> onOf ;
             string str1;
             str1 = stri1;
             string str2;
@@ -148,6 +149,24 @@ int main()
             str2 = stri2;
             ifSyntax.push_back(str1);
             ifSyntax.push_back(str2);
+            onOf.push_back("turnon");
+            onOf.push_back("turnof");
+
+            auto changer = [&]()
+            {
+                if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
+                    d[4].onConnect();
+                if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
+                    d[4].onDisconnect();
+                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
+                    d[5].onConnect();
+                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
+                    d[5].onDisconnect();
+                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
+                    d[6].onConnect();
+                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
+                    d[6].onDisconnect();
+            };
 
             //Lambda function to for less than condition
             auto checkerForLessthan = [&]()
@@ -160,18 +179,7 @@ int main()
                        {
                            if(d[j].getVal()<valueToChange)
                            {
-                                if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
-                                    d[4].onConnect();
-                                if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
-                                    d[4].onDisconnect();
-                                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
-                                    d[5].onConnect();
-                                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
-                                    d[5].onDisconnect();
-                                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
-                                    d[6].onConnect();
-                                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
-                                    d[6].onDisconnect();
+                                changer();
                            }
                        }
                     }
@@ -189,18 +197,7 @@ int main()
                        {
                            if(d[j].getVal()>valueToChange )
                            {
-                               if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
-                                    d[4].onConnect();
-                                if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
-                                    d[4].onDisconnect();
-                                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
-                                    d[5].onConnect();
-                                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
-                                    d[5].onDisconnect();
-                                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
-                                    d[6].onConnect();
-                                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
-                                    d[6].onDisconnect();
+                               changer();
                            }
                        }
                     }
@@ -218,30 +215,12 @@ int main()
                        {
                            if(d[j].getVal()==valueToChange)
                            {
-                               if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
-                                    d[4].onConnect();
-                                if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
-                                    d[4].onDisconnect();
-                                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
-                                    d[5].onConnect();
-                                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
-                                    d[5].onDisconnect();
-                                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
-                                    d[6].onConnect();
-                                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
-                                    d[6].onDisconnect();
+                               changer();
                            }
                        }
                     }
                 }
     		};
-
-
-
-
-
-
-
 
             //The above conditioned lambda functions are stored in vector functions
     		vector<f_t> *renderFunctions = new vector<f_t>;
