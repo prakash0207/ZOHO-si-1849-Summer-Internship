@@ -10,10 +10,11 @@ void displayOptions();
 
 class Device
 {
-public:
     bool status=false;
     int val=0;
-    string sensorName;
+    vector<string> sensorName = {"temperature","motion","water","gas","fan","light","door"};
+
+public:
     void onConnect()
     {
         status = true;
@@ -38,13 +39,9 @@ public:
     {
         val -= 1;
     }
-    void putName(string sn)
+    string getName(int i)
     {
-        sensorName = sn;
-    }
-    string getName()
-    {
-        return sensorName;
+        return sensorName[i];
     }
 
 };
@@ -58,13 +55,7 @@ int main()
     int status;
     int choice;
 
-    d[0].putName("temperature");
-    d[1].putName("motion");
-    d[2].putName("water");
-    d[3].putName("gas");
-    d[4].putName("fan");
-    d[5].putName("light");
-    d[6].putName("door");
+
 
 
     do
@@ -149,17 +140,17 @@ int main()
 
             auto changer = [&]()
             {
-                if(ifSyntax[2]==d[4].getName() && ifSyntax[3] == "turnon")
+                if(ifSyntax[2]==d[4].getName(4) && ifSyntax[3] == "turnon")
                     d[4].onConnect();
-                if(ifSyntax[2]==d[4].getName() && ifSyntax[3] == "turnof")
+                if(ifSyntax[2]==d[4].getName(4) && ifSyntax[3] == "turnof")
                     d[4].onDisconnect();
-                if(ifSyntax[2]==d[5].getName() && ifSyntax[3] == "turnon")
+                if(ifSyntax[2]==d[5].getName(5) && ifSyntax[3] == "turnon")
                     d[5].onConnect();
-                if(ifSyntax[2]==d[5].getName() && ifSyntax[3] == "turnof")
+                if(ifSyntax[2]==d[5].getName(5) && ifSyntax[3] == "turnof")
                     d[5].onDisconnect();
-                if(ifSyntax[2]==d[6].getName() && ifSyntax[3] == "turnon")
+                if(ifSyntax[2]==d[6].getName(6) && ifSyntax[3] == "turnon")
                     d[6].onConnect();
-                if(ifSyntax[2]==d[6].getName() && ifSyntax[3] == "turnof")
+                if(ifSyntax[2]==d[6].getName(6) && ifSyntax[3] == "turnof")
                     d[6].onDisconnect();
             };
 
@@ -170,7 +161,7 @@ int main()
     		    {
     		        for(int j=0;j<7;j++)
                     {
-                       if(ifSyntax[0] == d[j].getName())
+                       if(ifSyntax[0] == d[j].getName(j))
                        {
                            if(d[j].getVal()<valueToChange)
                            {
@@ -188,7 +179,7 @@ int main()
                 {
                     for(int j=0;j<7;j++)
                     {
-                       if(ifSyntax[0] == d[j].getName())
+                       if(ifSyntax[0] == d[j].getName(j))
                        {
                            if(d[j].getVal()>valueToChange )
                            {
@@ -206,7 +197,7 @@ int main()
                 {
                     for(int j=0;j<7;j++)
                     {
-                       if(ifSyntax[0] == d[j].getName())
+                       if(ifSyntax[0] == d[j].getName(j))
                        {
                            if(d[j].getVal()==valueToChange)
                            {
@@ -238,12 +229,12 @@ int main()
             cout<<left<<setw(14)<<"Sensor"<<left<<setw(10)<<"Value"<<left<<setw(10)<<"Status"<<endl;
             for(int i=0;i<4;i++)
             {
-                cout<<left<<setw(14)<<d[i].getName()<<left<<setw(10)<<d[i].getVal()<<left<<setw(10)<<d[i].getStatus()<<endl;
+                cout<<left<<setw(14)<<d[i].getName(i)<<left<<setw(10)<<d[i].getVal()<<left<<setw(10)<<d[i].getStatus()<<endl;
             }
             cout<<left<<setw(14)<<"Device"<<left<<setw(10)<<"Status"<<endl;
             for(int i=4;i<7;i++)
             {
-                cout<<left<<setw(14)<<d[i].getName()<<left<<setw(10)<<d[i].getStatus()<<endl;
+                cout<<left<<setw(14)<<d[i].getName(i)<<left<<setw(10)<<d[i].getStatus()<<endl;
             }
         }
     }
