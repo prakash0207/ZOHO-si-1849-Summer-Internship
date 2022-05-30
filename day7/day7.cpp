@@ -2,29 +2,18 @@
 #include<cstdio>
 #include<vector>
 #include <functional>
+#include <iomanip>
 typedef std::function<void()> f_t;
 using namespace std;
 void displayOptions();
 
-enum deviceType
-{
-    temperature,
-    motion,
-    water,
-    gas,
-    fan,
-    light,
-    door
-};
-
-const char *deviceTypeString[] = {"temperature","motion","water","gas","fan","light","door"};
 
 class Device
 {
 public:
-    deviceType devicetype;
     bool status=false;
     int val=0;
+    string sensorName;
     void onConnect()
     {
         status = true;
@@ -49,10 +38,15 @@ public:
     {
         val -= 1;
     }
-    void putDeviceType(deviceType dt)
+    void putName(string sn)
     {
-        devicetype = dt;
+        sensorName = sn;
     }
+    string getName()
+    {
+        return sensorName;
+    }
+
 };
 
 
@@ -63,13 +57,14 @@ int main()
     int val;
     int status;
     int choice;
-    d[0].putDeviceType(temperature);
-    d[1].putDeviceType(motion);
-    d[2].putDeviceType(water);
-    d[3].putDeviceType(gas);
-    d[4].putDeviceType(fan);
-    d[5].putDeviceType(light);
-    d[6].putDeviceType(door);
+
+    d[0].putName("temperature");
+    d[1].putName("motion");
+    d[2].putName("water");
+    d[3].putName("gas");
+    d[4].putName("fan");
+    d[5].putName("light");
+    d[6].putName("door");
 
 
     do
@@ -154,17 +149,17 @@ int main()
 
             auto changer = [&]()
             {
-                if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnon")
+                if(ifSyntax[2]==d[4].getName() && ifSyntax[3] == "turnon")
                     d[4].onConnect();
-                if(ifSyntax[2]=="fan" && ifSyntax[3] == "turnof")
+                if(ifSyntax[2]==d[4].getName() && ifSyntax[3] == "turnof")
                     d[4].onDisconnect();
-                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnon")
+                if(ifSyntax[2]==d[5].getName() && ifSyntax[3] == "turnon")
                     d[5].onConnect();
-                if(ifSyntax[2]=="light" && ifSyntax[3] == "turnof")
+                if(ifSyntax[2]==d[5].getName() && ifSyntax[3] == "turnof")
                     d[5].onDisconnect();
-                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnon")
+                if(ifSyntax[2]==d[6].getName() && ifSyntax[3] == "turnon")
                     d[6].onConnect();
-                if(ifSyntax[2]=="door" && ifSyntax[3] == "turnof")
+                if(ifSyntax[2]==d[6].getName() && ifSyntax[3] == "turnof")
                     d[6].onDisconnect();
             };
 
@@ -175,7 +170,7 @@ int main()
     		    {
     		        for(int j=0;j<7;j++)
                     {
-                       if(ifSyntax[0] == deviceTypeString[d[j].devicetype])
+                       if(ifSyntax[0] == d[j].getName())
                        {
                            if(d[j].getVal()<valueToChange)
                            {
@@ -193,7 +188,7 @@ int main()
                 {
                     for(int j=0;j<7;j++)
                     {
-                       if(ifSyntax[0] == deviceTypeString[d[j].devicetype])
+                       if(ifSyntax[0] == d[j].getName())
                        {
                            if(d[j].getVal()>valueToChange )
                            {
@@ -211,7 +206,7 @@ int main()
                 {
                     for(int j=0;j<7;j++)
                     {
-                       if(ifSyntax[0] == deviceTypeString[d[j].devicetype])
+                       if(ifSyntax[0] == d[j].getName())
                        {
                            if(d[j].getVal()==valueToChange)
                            {
@@ -240,19 +235,16 @@ int main()
         }
         if(choice == 3)
         {
-            cout<<"If status 1 then On else Off"<<endl;
-            cout<<"SENSORS        STATUS        Value"<<endl;
-            cout<<"-------        ------        -----"<<endl;
-            cout<<"Temperature    "<<d[0].getStatus()<<"             "<<d[0].val<<endl;
-            cout<<"Motion         "<<d[1].getStatus()<<"             "<<d[1].val<<endl;
-            cout<<"Water          "<<d[2].getStatus()<<"             "<<d[2].val<<endl;
-            cout<<"Gas            "<<d[3].getStatus()<<"             "<<d[3].val<<endl;
-            cout<<"---------------------------------------"<<endl;
-            cout<<"DEVICES        STATUS"<<endl;
-            cout<<"-------        ------"<<endl;
-            cout<<"Fan            "<<d[4].getStatus()<<endl;
-            cout<<"Light          "<<d[5].getStatus()<<endl;
-            cout<<"Door           "<<d[6].getStatus()<<endl;
+            cout<<left<<setw(14)<<"Sensor"<<left<<setw(10)<<"Value"<<left<<setw(10)<<"Status"<<endl;
+            for(int i=0;i<4;i++)
+            {
+                cout<<left<<setw(14)<<d[i].getName()<<left<<setw(10)<<d[i].getVal()<<left<<setw(10)<<d[i].getStatus()<<endl;
+            }
+            cout<<left<<setw(14)<<"Device"<<left<<setw(10)<<"Status"<<endl;
+            for(int i=4;i<7;i++)
+            {
+                cout<<left<<setw(14)<<d[i].getName()<<left<<setw(10)<<d[i].getStatus()<<endl;
+            }
         }
     }
     while(choice != 4);
