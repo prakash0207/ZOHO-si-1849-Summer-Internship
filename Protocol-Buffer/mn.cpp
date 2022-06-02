@@ -9,6 +9,71 @@
 
 using namespace std;
 
+
+void fileWriteVersion(version::FileBook fb)
+{
+    fstream output("version.bin", ios::out | ios::trunc | ios::binary);
+    fb.SerializeToOstream(&output);
+}
+
+void fileWriteFile(textfile::FilePersonBook fpb)
+{
+    fstream output("file.bin", ios::out | ios::trunc | ios::binary);
+    fpb.SerializeToOstream(&output);
+}
+
+void versionUpdate(string fileToUpdate, version::FileBook fb, version::ParticularFile pf, version::ParticularFile::Version pfv, int userId, int fileId)
+{
+    int operationNumber = 0;
+    int versionNumber = 1;
+    pfv.set_filecontent(fileToUpdate);
+    for (int i = 0; i < fb.file_size(); i++)
+    {
+        if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
+        {
+            for (int j = 0; j < fb.file(i).ver_size(); j++)
+            {
+                if (fb.file(i).ver(j).operationno() > 0)
+                {
+                    operationNumber = fb.file(i).ver(j).operationno();
+                }
+                if (fb.file(i).ver(j).versionno() > 0)
+                {
+                    versionNumber = fb.file(i).ver(j).versionno();
+                }
+            }
+        }
+    }
+
+    chrono::system_clock::time_point p = chrono::system_clock::now();
+    time_t t = chrono::system_clock::to_time_t(p);
+    char str[27];
+    ctime_s(str, sizeof str, &t);
+    pfv.set_time(str);
+
+
+    operationNumber += 1;
+    pfv.set_operationno(operationNumber);
+
+    //For every Nth operation create a version number. (N can be 5 by default).
+    if (operationNumber % 5 == 0)
+    {
+        versionNumber += 1;
+    }
+    pfv.set_versionno(versionNumber);
+    pf.set_fileid(fileId);
+    pf.set_userid(userId);
+    pf.add_ver()->CopyFrom(pfv);
+    fb.add_file()->CopyFrom(pf);
+    fileWriteVersion(fb);
+}
+
+void add()
+{
+
+}
+
+
 //Project portal module
 void projectPortal(int userId)
 {
@@ -19,7 +84,7 @@ void projectPortal(int userId)
     cin >> projectPortalChoice;
     if (projectPortalChoice == 1)
     {
-        string fileName, fileInput;
+        string fileName;
         int fileId = 0;
         string fileContent;
         bool flag = false;
@@ -32,28 +97,13 @@ void projectPortal(int userId)
         projectstructure::FilePerson fp1;
         projectstructure::FilePerson::FileProperties fpp1;
         {
-            // Read the existing address book.
             fstream input("file.bin", ios::in | ios::binary);
-            if (!input)
-            {
-                cout << "file.bin" << ": File not found.  Creating a new file." << endl;
-            }
-            else if (!fpb.ParseFromIstream(&input))
-            {
-                cerr << "Failed to parse address book." << endl;
-            }
+            fpb.ParseFromIstream(&input);
+            
         }
         {
-            // Read the existing address book.
             fstream input("filestructure.bin", ios::in | ios::binary);
-            if (!input)
-            {
-                cout << "filestructure.bin" << ": File not found.  Creating a new file." << endl;
-            }
-            else if (!fpb1.ParseFromIstream(&input))
-            {
-                cerr << "Failed to parse address book." << endl;
-            }
+            fpb1.ParseFromIstream(&input);
         }
 
 
@@ -95,33 +145,13 @@ void projectPortal(int userId)
         fpp1.set_filename(fileName);
         fp1.add_file()->CopyFrom(fpp1);
         fpb1.add_people()->CopyFrom(fp1);
-
-
-        {
-            fstream output("file.bin", ios::out | ios::trunc | ios::binary);
-            if (!fpb.SerializeToOstream(&output))
-            {
-                cerr << "Failed to write address book." << endl;
-            }
-        }
-
+        fileWriteFile(fpb);
         {
             fstream output("filestructure.bin", ios::out | ios::trunc | ios::binary);
-            if (!fpb1.SerializeToOstream(&output))
-            {
-                cerr << "Failed to write address book." << endl;
-            }
+            fpb1.SerializeToOstream(&output);
         }
         return projectPortal(userId);
     }
-
-
-
-
-
-
-
-
 
 
     else
@@ -129,24 +159,13 @@ void projectPortal(int userId)
         string fileChoiceName;
         int optionToEdit;
         textfile::FilePersonBook fpb;
-        int operationNumber = 0;
-        int versionNumber = 1;
         int fileId;
-
-
-
+        int peopleCounter;
+        int fileCounter;
 
         {
-            // Read the existing address book.
             fstream input("file.bin", ios::in | ios::binary);
-            if (!input)
-            {
-                cout << "file.bin" << ": File not found.  Creating a new file." << endl;
-            }
-            else if (!fpb.ParseFromIstream(&input))
-            {
-                cerr << "Failed to parse address book." << endl;
-            }
+            fpb.ParseFromIstream(&input);
         }
 
         for (int i = 0; i < fpb.people_size(); i++)
@@ -159,26 +178,31 @@ void projectPortal(int userId)
                     {
                         cout << fpb.people(i).file(j).filename() << endl;
                     }
-                    
-                }                
+
+                }
             }
         }
         bool flag = true;
 
         cout << "Enter the project name to open the project: ";
         cin >> fileChoiceName;
+
         for (int i = 0; i < fpb.people_size(); i++)
         {
             for (int j = 0; j < fpb.people(i).file_size(); j++)
             {
                 if (fpb.people(i).userid() == userId && fpb.people(i).file(j).filename() == fileChoiceName)
                 {
+                    peopleCounter = i;
+                    fileCounter = j;
                     fileId = fpb.people(i).file(j).fileid();
-                    cout << "File is located!"<<endl;
+                    cout << "File is located!" << endl;
                     flag = false;
                 }
             }
         }
+
+
         if (flag == true)
         {
             cout << "File is not available enter a valid file name" << endl;
@@ -190,16 +214,8 @@ void projectPortal(int userId)
             version::ParticularFile pf;
             version::ParticularFile::Version pfv;
             {
-                // Read the existing address book.
                 fstream input("version.bin", ios::in | ios::binary);
-                if (!input)
-                {
-                    cout << "version.bin" << ": File not found.  Creating a new file." << endl;
-                }
-                else if (!fb.ParseFromIstream(&input))
-                {
-                    cerr << "Failed to parse address book." << endl;
-                }
+                fb.ParseFromIstream(&input);
             }
 
             //Once the user opens any of the project , have to show options to Add, update, remove and display the notepad content.
@@ -212,92 +228,18 @@ void projectPortal(int userId)
             cout << "6)Exit" << endl;
             cin >> optionToEdit;
 
-
-
-
             if (optionToEdit == 1)
             {
                 string fileContent;
                 cout << "Enter the content to append at the end of the file(In new line type Q to exit): ";
                 cin.get();
                 getline(cin, fileContent, 'Q');
-
-
-                
-
-                for (int i = 0; i < fpb.people_size(); i++)
-                {
-                    for (int j = 0; j < fpb.people(i).file_size(); j++)
-                    {
-                        if (fpb.people(i).userid() == userId && fpb.people(i).file(j).filename() == fileChoiceName)
-                        {
-                            fileContent = fpb.people(i).file(j).filecontent() + fileContent;
-                            fpb.mutable_people(i)->mutable_file(j)->set_filecontent(fileContent);
-                        }
-                    }
-                }
-
-
-
-
-                pfv.set_filecontent(fileContent);
-                for (int i = 0; i < fb.file_size(); i++)
-                {
-                    if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
-                    {
-                        for (int j = 0; j < fb.file(i).ver_size(); j++)
-                        {
-                            if (fb.file(i).ver(j).operationno() > 0)
-                            {
-                                operationNumber = fb.file(i).ver(j).operationno();
-                            }
-                            if (fb.file(i).ver(j).versionno() > 0)
-                            {
-                                versionNumber = fb.file(i).ver(j).versionno();
-                            }
-                        }
-                    }
-                }
-
-                chrono::system_clock::time_point p = chrono::system_clock::now();
-                time_t t = chrono::system_clock::to_time_t(p);
-                char str[27];
-                ctime_s(str, sizeof str, &t); 
-                pfv.set_time(str);
-
-
-                operationNumber += 1;                
-                pfv.set_operationno(operationNumber);
-
-                //For every Nth operation create a version number. (N can be 5 by default).
-                if (operationNumber % 5 == 0)
-                {
-                    versionNumber += 1;
-                }
-                pfv.set_versionno(versionNumber);
-                pf.set_fileid(fileId);
-                pf.set_userid(userId);
-                pf.add_ver()->CopyFrom(pfv);
-                fb.add_file()->CopyFrom(pf);
-
-                {
-                    fstream output("version.bin", ios::out | ios::trunc | ios::binary);
-                    if (!fb.SerializeToOstream(&output))
-                    {
-                        cerr << "Failed to write address book." << endl;
-                    }
-                }
-
-                {
-                    fstream output("file.bin", ios::out | ios::binary);
-                    if (!fpb.SerializeToOstream(&output))
-                    {
-                        cerr << "Failed to write address book." << endl;
-                    }
-                }
-                
-               
+                fileContent = fpb.people(peopleCounter).file(fileCounter).filecontent() + fileContent;
+                fpb.mutable_people(peopleCounter)->mutable_file(fileCounter)->set_filecontent(fileContent);
+                fileWriteFile(fpb);
+                versionUpdate(fileContent, fb, pf, pfv, userId, fileId);
             }
+
 
             if (optionToEdit == 2)
             {
@@ -305,45 +247,34 @@ void projectPortal(int userId)
                 cout << "1) To overwrite a particular line" << endl;
                 cout << "2) To overwrite the entire document" << endl;
                 cin >> editChoice;
+
+
                 if (editChoice == 1)
                 {
                     string toUpdate;
                     char updated[10001];
                     int line;
-                    int count=1;
-                    
-                    bool check = true;
-                    int counter=0;
-                    string updatedS;
-                    for (int i = 0; i < fpb.people_size(); i++)
-                    {
-                        for (int j = 0; j < fpb.people(i).file_size(); j++)
-                        {
-                            if (fpb.people(i).file(j).filename() == fileChoiceName && fpb.people(i).userid() == userId)
-                            {                                
-                                for (int k = 0; k < fpb.people(i).file(j).filecontent().length(); k++)
-                                {
+                    int count = 1;
 
-                                    if ((fpb.people(i).file(j).filecontent()[k] == '\n' || k == 0) && (fpb.people(i).file(j).filecontent()[k+1] != '\0'))
-                                    {
-                                        cout << endl;
-                                        cout << count << ")";
-                                        count += 1;
-                                    }
-                                    
-                                    if (fpb.people(i).file(j).filecontent()[k] != '\n' )
-                                    {
-                                        cout << fpb.people(i).file(j).filecontent()[k];
-                                    }
-                                    
-                                    
-                                  
-                                }
-                                cout << endl;
-                                break;
-                            }
+                    bool check = true;
+                    int counter = 0;
+                    string updatedS;
+
+                    for (int k = 0; k < fpb.people(peopleCounter).file(fileCounter).filecontent().length(); k++)
+                    {
+                        if ((fpb.people(peopleCounter).file(fileCounter).filecontent()[k] == '\n' || k == 0) && (fpb.people(peopleCounter).file(fileCounter).filecontent()[k + 1] != '\0'))
+                        {
+                            cout << endl;
+                            cout << count << ")";
+                            count += 1;
+                        }
+                        if (fpb.people(peopleCounter).file(fileCounter).filecontent()[k] != '\n')
+                        {
+                            cout << fpb.people(peopleCounter).file(fileCounter).filecontent()[k];
                         }
                     }
+                    cout << "\n";
+
 
                     cout << "Enter the line that needs to be changed: ";
                     cin >> line;
@@ -351,189 +282,54 @@ void projectPortal(int userId)
                     cin.get();
                     getline(cin, toUpdate);
                     count = 0;
-                    for (int i = 0; i < fpb.people_size(); i++)
+
+                    for (int k = 0; k < fpb.people(peopleCounter).file(fileCounter).filecontent().length(); k++)
                     {
-                        for (int j = 0; j < fpb.people(i).file_size(); j++)
+                        if (count == line - 1)
                         {
-                            if (fpb.people(i).file(j).filename() == fileChoiceName && fpb.people(i).userid() == userId)
+                            if (check)
                             {
-                                for (int k = 0; k < fpb.people(i).file(j).filecontent().length(); k++)
+                                for (int l = 0; l < toUpdate.length(); l++)
                                 {
-
-                                    if (count == line - 1)
-                                    {
-                                        if (check)
-                                        {
-                                            for (int l = 0; l < toUpdate.length(); l++)
-                                            {
-                                                updated[counter] = toUpdate[l];
-                                                counter += 1;
-                                            }
-                                            updated[counter] = '\n';
-                                            counter += 1;
-                                            check = false;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        updated[counter] = fpb.people(i).file(j).filecontent()[k];
-                                        counter += 1;
-                                    }
-                                    if (fpb.people(i).file(j).filecontent()[k] == '\n')
-                                    {
-                                        count += 1;
-                                    }
+                                    updated[counter] = toUpdate[l];
+                                    counter += 1;
                                 }
-                                updated[counter] = '\0';                             
-                                updatedS += updated;
-
-
-                                pfv.set_filecontent(updatedS);
-                                for (int i = 0; i < fb.file_size(); i++)
-                                {
-                                    if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
-                                    {
-                                        for (int j = 0; j < fb.file(i).ver_size(); j++)
-                                        {
-                                            if (fb.file(i).ver(j).operationno() > 0)
-                                            {
-                                                operationNumber = fb.file(i).ver(j).operationno();
-                                            }
-                                            if (fb.file(i).ver(j).versionno() > 0)
-                                            {
-                                                versionNumber = fb.file(i).ver(j).versionno();
-                                            }
-                                        }
-                                    }
-                                }
-
-                                chrono::system_clock::time_point p = chrono::system_clock::now();
-                                time_t t = chrono::system_clock::to_time_t(p);
-                                char str[27];
-                                ctime_s(str, sizeof str, &t);
-                                pfv.set_time(str);
-
-                                operationNumber += 1;
-                                pfv.set_operationno(operationNumber);
-
-                                //For every Nth operation create a version number. (N can be 5 by default).
-                                if (operationNumber % 5 == 0)
-                                {
-                                    versionNumber += 1;
-                                }
-                                pfv.set_versionno(versionNumber);
-                                pf.set_fileid(fileId);
-                                pf.set_userid(userId);
-                                pf.add_ver()->CopyFrom(pfv);
-                                fb.add_file()->CopyFrom(pf);
-
-                                {
-                                    fstream output("version.bin", ios::out | ios::trunc | ios::binary);
-                                    if (!fb.SerializeToOstream(&output))
-                                    {
-                                        cerr << "Failed to write address book." << endl;
-                                    }
-                                }
-
-
-                                fpb.mutable_people(i)->mutable_file(j)->set_filecontent(updatedS);
-                                {
-                                    fstream output("file.bin", ios::out | ios::binary);
-                                    if (!fpb.SerializeToOstream(&output))
-                                    {
-                                        cerr << "Failed to write address book." << endl;
-                                    }
-                                }
-
-
-                                break;
+                                updated[counter] = '\n';
+                                counter += 1;
+                                check = false;
                             }
+                        }
+                        else
+                        {
+                            updated[counter] = fpb.people(peopleCounter).file(fileCounter).filecontent()[k];
+                            counter += 1;
+                        }
+                        if (fpb.people(peopleCounter).file(fileCounter).filecontent()[k] == '\n')
+                        {
+                            count += 1;
                         }
                     }
 
-                    
+                    updated[counter] = '\0';
+                    updatedS += updated;
+                    fpb.mutable_people(peopleCounter)->mutable_file(fileCounter)->set_filecontent(updatedS);
+                    fileWriteFile(fpb);
+
+                    versionUpdate(updatedS, fb, pf, pfv, userId, fileId);
                 }
+
                 else
                 {
                     string toUpdate;
-                    cout << "Enter the contents to be overwritten"<<endl;
-                    getline(cin, toUpdate, 'Q');
-                    for (int i = 0; i < fpb.people_size(); i++)
-                    {
-                        for (int j = 0; j < fpb.people(i).file_size(); j++)
-                        {
-                            if (fpb.people(i).userid() == userId && fpb.people(i).file(j).filename() == fileChoiceName)
-                            {
-                                fpb.mutable_people(i)->mutable_file(j)->set_filecontent(toUpdate);
+                    cout << "Enter the contents to be overwritten" << endl;
+                    getline(cin, toUpdate, 'Q');                    
+                    fpb.mutable_people(peopleCounter)->mutable_file(fileCounter)->set_filecontent(toUpdate);
+                    fileWriteFile(fpb);
 
-                                {
-                                    fstream output("file.bin", ios::out | ios::binary);
-                                    if (!fpb.SerializeToOstream(&output))
-                                    {
-                                        cerr << "Failed to write address book." << endl;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    pfv.set_filecontent(toUpdate);
-                    for (int i = 0; i < fb.file_size(); i++)
-                    {
-                        if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
-                        {
-                            for (int j = 0; j < fb.file(i).ver_size(); j++)
-                            {
-                                if (fb.file(i).ver(j).operationno() > 0)
-                                {
-                                    operationNumber = fb.file(i).ver(j).operationno();
-                                }
-                                if (fb.file(i).ver(j).versionno() > 0)
-                                {
-                                    versionNumber = fb.file(i).ver(j).versionno();
-                                }
-                            }
-                        }
-                    }
-
-                    chrono::system_clock::time_point p = chrono::system_clock::now();
-                    time_t t = chrono::system_clock::to_time_t(p);
-                    char str[27];
-                    ctime_s(str, sizeof str, &t);
-                    pfv.set_time(str);
-
-                    operationNumber += 1;
-                    pfv.set_operationno(operationNumber);
-
-                    //For every Nth operation create a version number. (N can be 5 by default).
-                    if (operationNumber % 5 == 0)
-                    {
-                        versionNumber += 1;
-                    }
-                    pfv.set_versionno(versionNumber);
-                    pf.set_fileid(fileId);
-                    pf.set_userid(userId);
-                    pf.add_ver()->CopyFrom(pfv);
-                    fb.add_file()->CopyFrom(pf);
-
-                    {
-                        fstream output("version.bin", ios::out | ios::trunc | ios::binary);
-                        if (!fb.SerializeToOstream(&output))
-                        {
-                            cerr << "Failed to write address book." << endl;
-                        }
-                    }
-
+                    versionUpdate(toUpdate, fb, pf, pfv, userId, fileId);
+                                     
                 }
-
-                
             }
-
-
-
-
-
-
 
 
             if (optionToEdit == 3)
@@ -552,209 +348,85 @@ void projectPortal(int userId)
                     bool check = true;
                     int counter = 0;
                     string updatedS;
-                    for (int i = 0; i < fpb.people_size(); i++)
+                    
+                    for (int k = 0; k < fpb.people(peopleCounter).file(fileCounter).filecontent().length(); k++)
                     {
-                        for (int j = 0; j < fpb.people(i).file_size(); j++)
+                        if ((fpb.people(peopleCounter).file(fileCounter).filecontent()[k] == '\n' || k == 0) && (fpb.people(peopleCounter).file(fileCounter).filecontent()[k + 1] != '\0'))
                         {
-                            if (fpb.people(i).file(j).filename() == fileChoiceName && fpb.people(i).userid() == userId)
-                            {
-                                for (int k = 0; k < fpb.people(i).file(j).filecontent().length(); k++)
-                                {
+                            cout << endl;
+                            cout << count << ")";
+                            count += 1;
+                        }
 
-                                    if ((fpb.people(i).file(j).filecontent()[k] == '\n' || k == 0) && (fpb.people(i).file(j).filecontent()[k + 1] != '\0'))
-                                    {
-                                        cout << endl;
-                                        cout << count << ")";
-                                        count += 1;
-                                    }
-
-                                    if (fpb.people(i).file(j).filecontent()[k] != '\n')
-                                    {
-                                        cout << fpb.people(i).file(j).filecontent()[k];
-                                    }
-
-
-
-                                }
-                                cout << endl;
-                                break;
-                            }
+                        if (fpb.people(peopleCounter).file(fileCounter).filecontent()[k] != '\n')
+                        {
+                            cout << fpb.people(peopleCounter).file(fileCounter).filecontent()[k];
                         }
                     }
+                    cout << "\n";
+                               
                     cout << "Enter the line that needs to be removed: ";
                     cin >> line;
                     count = 0;
-                    for (int i = 0; i < fpb.people_size(); i++)
+                    
+                    for (int k = 0; k < fpb.people(peopleCounter).file(fileCounter).filecontent().length(); k++)
                     {
-                        for (int j = 0; j < fpb.people(i).file_size(); j++)
+                        if (count == line - 1)
                         {
-                            if (fpb.people(i).file(j).filename() == fileChoiceName && fpb.people(i).userid() == userId)
-                            {
-                                for (int k = 0; k < fpb.people(i).file(j).filecontent().length(); k++)
-                                {
-
-                                    if (count == line - 1)
-                                    {
-                                    }
-                                    else
-                                    {
-                                        updated[counter] = fpb.people(i).file(j).filecontent()[k];
-                                        counter += 1;
-                                    }
-                                    if (fpb.people(i).file(j).filecontent()[k] == '\n')
-                                    {
-                                        updated[counter] = fpb.people(i).file(j).filecontent()[k];
-                                        count += 1;
-                                    }
-                                }
-                                updated[counter] = '\0';
-                                updatedS += updated;
-                                fpb.mutable_people(i)->mutable_file(j)->set_filecontent(updatedS);
-                                {
-                                    fstream output("file.bin", ios::out | ios::binary);
-                                    if (!fpb.SerializeToOstream(&output))
-                                    {
-                                        cerr << "Failed to write address book." << endl;
-                                    }
-                                }
-                                break;
-                            }
+                        }
+                        else
+                        {
+                            updated[counter] = fpb.people(peopleCounter).file(fileCounter).filecontent()[k];
+                            counter += 1;
+                        }
+                        if (fpb.people(peopleCounter).file(fileCounter).filecontent()[k] == '\n')
+                        {
+                            updated[counter] = fpb.people(peopleCounter).file(fileCounter).filecontent()[k];
+                            count += 1;
                         }
                     }
-                    pfv.set_filecontent(updatedS);
-                    for (int i = 0; i < fb.file_size(); i++)
-                    {
-                        if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
-                        {
-                            for (int j = 0; j < fb.file(i).ver_size(); j++)
-                            {
-                                if (fb.file(i).ver(j).operationno() > 0)
-                                {
-                                    operationNumber = fb.file(i).ver(j).operationno();
-                                }
-                                if (fb.file(i).ver(j).versionno() > 0)
-                                {
-                                    versionNumber = fb.file(i).ver(j).versionno();
-                                }
-                            }
-                        }
-                    }
-
-                    chrono::system_clock::time_point p = chrono::system_clock::now();
-                    time_t t = chrono::system_clock::to_time_t(p);
-                    char str[27];
-                    ctime_s(str, sizeof str, &t);
-                    pfv.set_time(str);
-
-                    operationNumber += 1;
-                    pfv.set_operationno(operationNumber);
-
-                    //For every Nth operation create a version number. (N can be 5 by default).
-                    if (operationNumber % 5 == 0)
-                    {
-                        versionNumber += 1;
-                    }
-                    pfv.set_versionno(versionNumber);
-                    pf.set_fileid(fileId);
-                    pf.set_userid(userId);
-                    pf.add_ver()->CopyFrom(pfv);
-                    fb.add_file()->CopyFrom(pf);
-
-                    {
-                        fstream output("version.bin", ios::out | ios::trunc | ios::binary);
-                        if (!fb.SerializeToOstream(&output))
-                        {
-                            cerr << "Failed to write address book." << endl;
-                        }
-                    }
-
-
+                    updated[counter] = '\0';
+                    updatedS += updated;
+                    fpb.mutable_people(peopleCounter)->mutable_file(fileCounter)->set_filecontent(updatedS);
+                    fileWriteFile(fpb);
+                    
+                    versionUpdate(updatedS, fb, pf, pfv, userId, fileId);
                 }
                 else
                 {
                     string toUpdate;
                     toUpdate = "";
-                    
-                    for (int i = 0; i < fpb.people_size(); i++)
-                    {
-                        for (int j = 0; j < fpb.people(i).file_size(); j++)
-                        {
-                            if (fpb.people(i).userid() == userId && fpb.people(i).file(j).filename() == fileChoiceName)
-                            {
-                                fpb.mutable_people(i)->mutable_file(j)->set_filename("");
-                                fpb.mutable_people(i)->mutable_file(j)->set_fileid(-1);
-                                fpb.mutable_people(i)->mutable_file(j)->set_filecontent("");
-                               
-                                {
-                                    fstream output("file.bin", ios::out| ios::trunc | ios::binary);
-                                    if (!fpb.SerializeToOstream(&output))
-                                    {
-                                        cerr << "Failed to write address book." << endl;
-                                    }
-                                }
-                                return projectPortal(userId);
-                            }
-                        }
-                    }
-                    for (int i = 0; i < fb.file_size(); i++)
-                    {
-                        if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
-                        {
-                            
-                            fb.mutable_file(i)->Clear();
-                            
-                        }    
-                    }
-                    {
-                        fstream output("version.bin", ios::out | ios::trunc | ios::binary);
-                        if (!fb.SerializeToOstream(&output))
-                        {
-                            cerr << "Failed to write address book." << endl;
-                        }
-                    }
-                    
+
+                    fpb.mutable_people(peopleCounter)->mutable_file(fileCounter)->set_filename("");
+                    fpb.mutable_people(peopleCounter)->mutable_file(fileCounter)->set_fileid(-1);
+                    fpb.mutable_people(peopleCounter)->mutable_file(fileCounter)->set_filecontent("");
+                    fileWriteFile(fpb);
+                    return projectPortal(userId);
                 }
             }
-
 
 
             if (optionToEdit == 4)
             {
                 int count = 1;
-                for (int i = 0; i < fpb.people_size(); i++)
+                
+                cout << "File Name: " << fileChoiceName << endl;
+                for (int k = 0; k < fpb.people(peopleCounter).file(fileCounter).filecontent().length(); k++)
                 {
-                    for (int j = 0; j < fpb.people(i).file_size(); j++)
+
+                    if ((fpb.people(peopleCounter).file(fileCounter).filecontent()[k] == '\n' || k == 0) && (fpb.people(peopleCounter).file(fileCounter).filecontent()[k + 1] != '\0'))
                     {
-               //         cout << fpb.people(i).userid() << ":" << fpb.people(i).file(j).fileid() << endl;
-                        
-                        if (fpb.people(i).file(j).filename() == fileChoiceName && fpb.people(i).userid() == userId)
-                        {
-                            cout << "File Name: " << fileChoiceName << endl;
-                            for (int k = 0; k < fpb.people(i).file(j).filecontent().length(); k++)
-                            {
+                        cout << endl;
+                        cout << count << ".";
+                        count += 1;
+                    }
 
-                                if ((fpb.people(i).file(j).filecontent()[k] == '\n' || k == 0) && (fpb.people(i).file(j).filecontent()[k + 1] != '\0'))
-                                {
-                                    cout << endl;
-                                    cout << count << ".";
-                                    count += 1;
-                                }
-
-                                if (fpb.people(i).file(j).filecontent()[k] != '\n')
-                                {
-                                    cout << fpb.people(i).file(j).filecontent()[k];
-                                }
-
-
-
-                            }
-                            cout << endl;
-                            cout << "\n";
-                            
-                        }
-                        
+                    if (fpb.people(peopleCounter).file(fileCounter).filecontent()[k] != '\n')
+                    {
+                        cout << fpb.people(peopleCounter).file(fileCounter).filecontent()[k];
                     }
                 }
+                cout << "\n";
             }
             if (optionToEdit == 5)
             {
@@ -787,38 +459,13 @@ void projectPortal(int userId)
                                 flag = false;
                                 break;
                             }
-                        }
-                        
-                    }
-                    
-                }
-
-                for (int i = 0; i < fpb.people_size(); i++)
-                {
-                    for (int j = 0; j < fpb.people(i).file_size(); j++)
-                    {
-                        if (fpb.people(i).userid() == userId && fpb.people(i).file(j).filename() == fileChoiceName)
-                        {
-                            fpb.mutable_people(i)->mutable_file(j)->set_filecontent(versionContent);
-
-                        }
+                        }                       
                     }
                 }
-
-                {
-                    fstream output("file.bin", ios::out | ios::trunc | ios::binary);
-                    if (!fpb.SerializeToOstream(&output))
-                    {
-                        cerr << "Failed to write address book." << endl;
-                    }
-                }
-
-
-
+                fpb.mutable_people(peopleCounter)->mutable_file(fileCounter)->set_filecontent(versionContent);
+                fileWriteFile(fpb);   
             }
-            
         } while (optionToEdit != 6);
-
     }
 }
 
@@ -832,17 +479,8 @@ int main()
     int signCheck = 0;
     bool loginCheck = true;
     {
-        // Read the existing address book.
         fstream input("Login.bin", ios::in | ios::binary);
-        if (!input) 
-        {
-            cout << "Login.bin" << ": File not found.  Creating a new file." << endl;
-        }
-        else if (!pb.ParseFromIstream(&input)) 
-        {
-            cerr << "Failed to parse address book." << endl;
-            return -1;
-        }
+        pb.ParseFromIstream(&input);
     }
 
     //User Portal
@@ -892,14 +530,11 @@ int main()
                 p1.set_email(email);
                 p1.set_password(password);
                 p1.set_userid(userId);
-                pb.add_people()->CopyFrom(p1);             
+                pb.add_people()->CopyFrom(p1);  
+
                 {
                     fstream output("login.bin", ios::out | ios::trunc | ios::binary);
-                    if (!pb.SerializeToOstream(&output))
-                    {
-                        cerr << "Failed to write address book." << endl;
-                        return -1;
-                    }
+                    pb.SerializeToOstream(&output);
                 }
             }
         }
