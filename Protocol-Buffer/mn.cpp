@@ -772,24 +772,25 @@ void projectPortal(int userId)
                 }
                 cout << "Enter Version number to get reverted: ";
                 cin >> versionNo;
-
+                bool flag = true;
 
                 //option to revert to particular version
-                for (int i = 0; i < fb.file_size(); i++)
+                for (int i = 0; i < fb.file_size() && flag; i++)
                 {
                     if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
                     {
-                        for (int j = 0; j < fb.file(i).ver_size(); j++)
+                        for (int j = 0; j < fb.file(i).ver_size() && flag; j++)
                         {
                             if (fb.file(i).ver(j).versionno() == versionNo)
                             {
                                 versionContent = fb.file(i).ver(j).filecontent();
+                                flag = false;
                                 break;
                             }
                         }
-                        break;
+                        
                     }
-                    break;
+                    
                 }
 
                 for (int i = 0; i < fpb.people_size(); i++)
