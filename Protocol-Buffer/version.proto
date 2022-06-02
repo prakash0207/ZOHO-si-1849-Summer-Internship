@@ -1,0 +1,21 @@
+syntax = "proto2";
+package version;
+
+message ParticularFile
+{
+    required int32 userid = 1;
+    required int32 fileid = 2;
+    message Version
+    {
+        required int32 versionno = 1;
+        required int32 operationno = 2;
+        required string filecontent = 3;
+    }
+    
+    repeated Version ver = 3;
+    
+}
+message FileBook
+{
+    repeated ParticularFile file = 1;
+}

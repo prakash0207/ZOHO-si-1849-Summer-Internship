@@ -1,0 +1,19 @@
+syntax = "proto2";
+package projectstructure;
+
+message FilePerson
+{
+    required int32 userid = 1;
+    message FileProperties
+    {
+        required int32 fileid = 1;
+        required string filename = 2;
+    }
+
+    repeated FileProperties file = 2;
+    
+}
+message FilePersonBook
+{
+    repeated FilePerson people = 1;
+}

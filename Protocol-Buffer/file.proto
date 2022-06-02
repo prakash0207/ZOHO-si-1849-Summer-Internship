@@ -1,0 +1,20 @@
+syntax = "proto2";
+package textfile;
+
+message FilePerson
+{
+    required int32 userid = 1;
+    message FileProperties
+    {
+        required int32 fileid = 1;
+        required string filename = 2;
+        required string filecontent = 3;
+    }
+    
+    repeated FileProperties file = 2;
+    
+}
+message FilePersonBook
+{
+    repeated FilePerson people = 1;
+}
