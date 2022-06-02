@@ -1,15 +1,18 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "login.pb.h"
-#include "file.pb.h"
-#include "filedata.pb.h"
-#include "version.pb.h"
+#include <chrono>
+#include "login.pb.h"     //user (name, location etc…). protocol structure
+#include "file.pb.h"      //Notepad project created should have its content stored in a separate file. gets store using the proto file header
+#include "filedata.pb.h"  //Project structure stored in separate file
+#include "version.pb.h"   //Version structure will have a id, createdTime, versionNumber etc.. and projectId to map the project.
 
 using namespace std;
 
+//Project portal module
 void projectPortal(int userId)
 {
+    //Once the user logs in, there must be an option with CreateNewFile and also list the already created projects.
     int projectPortalChoice;
     cout << "1)Create new Project" << endl;
     cout << "2)Open already created Project" << endl;
@@ -130,9 +133,8 @@ void projectPortal(int userId)
         int versionNumber = 1;
         int fileId;
 
-        version::FileBook fb;
-        version::ParticularFile pf;
-        version::ParticularFile::Version pfv;
+
+
 
         {
             // Read the existing address book.
@@ -142,18 +144,6 @@ void projectPortal(int userId)
                 cout << "file.bin" << ": File not found.  Creating a new file." << endl;
             }
             else if (!fpb.ParseFromIstream(&input))
-            {
-                cerr << "Failed to parse address book." << endl;
-            }
-        }
-        {
-            // Read the existing address book.
-            fstream input("version.bin", ios::in | ios::binary);
-            if (!input)
-            {
-                cout << "version.bin" << ": File not found.  Creating a new file." << endl;
-            }
-            else if (!fb.ParseFromIstream(&input))
             {
                 cerr << "Failed to parse address book." << endl;
             }
@@ -196,18 +186,9 @@ void projectPortal(int userId)
         }
         do
         {
-            {
-                // Read the existing address book.
-                fstream input("file.bin", ios::in | ios::binary);
-                if (!input)
-                {
-                    cout << "file.bin" << ": File not found.  Creating a new file." << endl;
-                }
-                else if (!fpb.ParseFromIstream(&input))
-                {
-                    cerr << "Failed to parse address book." << endl;
-                }
-            }
+            version::FileBook fb;
+            version::ParticularFile pf;
+            version::ParticularFile::Version pfv;
             {
                 // Read the existing address book.
                 fstream input("version.bin", ios::in | ios::binary);
@@ -220,6 +201,8 @@ void projectPortal(int userId)
                     cerr << "Failed to parse address book." << endl;
                 }
             }
+
+            //Once the user opens any of the project , have to show options to Add, update, remove and display the notepad content.
 
             cout << "1)Add" << endl;
             cout << "2)Update" << endl;
@@ -275,18 +258,35 @@ void projectPortal(int userId)
                         }
                     }
                 }
-                operationNumber += 1;
+
+                chrono::system_clock::time_point p = chrono::system_clock::now();
+                time_t t = chrono::system_clock::to_time_t(p);
+                char str[27];
+                ctime_s(str, sizeof str, &t); 
+                pfv.set_time(str);
+
+
+                operationNumber += 1;                
                 pfv.set_operationno(operationNumber);
+
+                //For every Nth operation create a version number. (N can be 5 by default).
                 if (operationNumber % 5 == 0)
                 {
-
+                    versionNumber += 1;
                 }
+                pfv.set_versionno(versionNumber);
+                pf.set_fileid(fileId);
+                pf.set_userid(userId);
+                pf.add_ver()->CopyFrom(pfv);
+                fb.add_file()->CopyFrom(pf);
 
-
-
-
-
-
+                {
+                    fstream output("version.bin", ios::out | ios::trunc | ios::binary);
+                    if (!fb.SerializeToOstream(&output))
+                    {
+                        cerr << "Failed to write address book." << endl;
+                    }
+                }
 
                 {
                     fstream output("file.bin", ios::out | ios::binary);
@@ -344,6 +344,7 @@ void projectPortal(int userId)
                             }
                         }
                     }
+
                     cout << "Enter the line that needs to be changed: ";
                     cin >> line;
                     cout << "Enter the text that needs to be overwritten: ";
@@ -385,6 +386,56 @@ void projectPortal(int userId)
                                 }
                                 updated[counter] = '\0';                             
                                 updatedS += updated;
+
+
+                                pfv.set_filecontent(updatedS);
+                                for (int i = 0; i < fb.file_size(); i++)
+                                {
+                                    if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
+                                    {
+                                        for (int j = 0; j < fb.file(i).ver_size(); j++)
+                                        {
+                                            if (fb.file(i).ver(j).operationno() > 0)
+                                            {
+                                                operationNumber = fb.file(i).ver(j).operationno();
+                                            }
+                                            if (fb.file(i).ver(j).versionno() > 0)
+                                            {
+                                                versionNumber = fb.file(i).ver(j).versionno();
+                                            }
+                                        }
+                                    }
+                                }
+
+                                chrono::system_clock::time_point p = chrono::system_clock::now();
+                                time_t t = chrono::system_clock::to_time_t(p);
+                                char str[27];
+                                ctime_s(str, sizeof str, &t);
+                                pfv.set_time(str);
+
+                                operationNumber += 1;
+                                pfv.set_operationno(operationNumber);
+
+                                //For every Nth operation create a version number. (N can be 5 by default).
+                                if (operationNumber % 5 == 0)
+                                {
+                                    versionNumber += 1;
+                                }
+                                pfv.set_versionno(versionNumber);
+                                pf.set_fileid(fileId);
+                                pf.set_userid(userId);
+                                pf.add_ver()->CopyFrom(pfv);
+                                fb.add_file()->CopyFrom(pf);
+
+                                {
+                                    fstream output("version.bin", ios::out | ios::trunc | ios::binary);
+                                    if (!fb.SerializeToOstream(&output))
+                                    {
+                                        cerr << "Failed to write address book." << endl;
+                                    }
+                                }
+
+
                                 fpb.mutable_people(i)->mutable_file(j)->set_filecontent(updatedS);
                                 {
                                     fstream output("file.bin", ios::out | ios::binary);
@@ -393,6 +444,8 @@ void projectPortal(int userId)
                                         cerr << "Failed to write address book." << endl;
                                     }
                                 }
+
+
                                 break;
                             }
                         }
@@ -412,6 +465,7 @@ void projectPortal(int userId)
                             if (fpb.people(i).userid() == userId && fpb.people(i).file(j).filename() == fileChoiceName)
                             {
                                 fpb.mutable_people(i)->mutable_file(j)->set_filecontent(toUpdate);
+
                                 {
                                     fstream output("file.bin", ios::out | ios::binary);
                                     if (!fpb.SerializeToOstream(&output))
@@ -420,6 +474,53 @@ void projectPortal(int userId)
                                     }
                                 }
                             }
+                        }
+                    }
+
+                    pfv.set_filecontent(toUpdate);
+                    for (int i = 0; i < fb.file_size(); i++)
+                    {
+                        if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
+                        {
+                            for (int j = 0; j < fb.file(i).ver_size(); j++)
+                            {
+                                if (fb.file(i).ver(j).operationno() > 0)
+                                {
+                                    operationNumber = fb.file(i).ver(j).operationno();
+                                }
+                                if (fb.file(i).ver(j).versionno() > 0)
+                                {
+                                    versionNumber = fb.file(i).ver(j).versionno();
+                                }
+                            }
+                        }
+                    }
+
+                    chrono::system_clock::time_point p = chrono::system_clock::now();
+                    time_t t = chrono::system_clock::to_time_t(p);
+                    char str[27];
+                    ctime_s(str, sizeof str, &t);
+                    pfv.set_time(str);
+
+                    operationNumber += 1;
+                    pfv.set_operationno(operationNumber);
+
+                    //For every Nth operation create a version number. (N can be 5 by default).
+                    if (operationNumber % 5 == 0)
+                    {
+                        versionNumber += 1;
+                    }
+                    pfv.set_versionno(versionNumber);
+                    pf.set_fileid(fileId);
+                    pf.set_userid(userId);
+                    pf.add_ver()->CopyFrom(pfv);
+                    fb.add_file()->CopyFrom(pf);
+
+                    {
+                        fstream output("version.bin", ios::out | ios::trunc | ios::binary);
+                        if (!fb.SerializeToOstream(&output))
+                        {
+                            cerr << "Failed to write address book." << endl;
                         }
                     }
 
@@ -520,6 +621,52 @@ void projectPortal(int userId)
                             }
                         }
                     }
+                    pfv.set_filecontent(updatedS);
+                    for (int i = 0; i < fb.file_size(); i++)
+                    {
+                        if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
+                        {
+                            for (int j = 0; j < fb.file(i).ver_size(); j++)
+                            {
+                                if (fb.file(i).ver(j).operationno() > 0)
+                                {
+                                    operationNumber = fb.file(i).ver(j).operationno();
+                                }
+                                if (fb.file(i).ver(j).versionno() > 0)
+                                {
+                                    versionNumber = fb.file(i).ver(j).versionno();
+                                }
+                            }
+                        }
+                    }
+
+                    chrono::system_clock::time_point p = chrono::system_clock::now();
+                    time_t t = chrono::system_clock::to_time_t(p);
+                    char str[27];
+                    ctime_s(str, sizeof str, &t);
+                    pfv.set_time(str);
+
+                    operationNumber += 1;
+                    pfv.set_operationno(operationNumber);
+
+                    //For every Nth operation create a version number. (N can be 5 by default).
+                    if (operationNumber % 5 == 0)
+                    {
+                        versionNumber += 1;
+                    }
+                    pfv.set_versionno(versionNumber);
+                    pf.set_fileid(fileId);
+                    pf.set_userid(userId);
+                    pf.add_ver()->CopyFrom(pfv);
+                    fb.add_file()->CopyFrom(pf);
+
+                    {
+                        fstream output("version.bin", ios::out | ios::trunc | ios::binary);
+                        if (!fb.SerializeToOstream(&output))
+                        {
+                            cerr << "Failed to write address book." << endl;
+                        }
+                    }
 
 
                 }
@@ -547,6 +694,22 @@ void projectPortal(int userId)
                                 }
                                 return projectPortal(userId);
                             }
+                        }
+                    }
+                    for (int i = 0; i < fb.file_size(); i++)
+                    {
+                        if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
+                        {
+                            
+                            fb.mutable_file(i)->Clear();
+                            
+                        }    
+                    }
+                    {
+                        fstream output("version.bin", ios::out | ios::trunc | ios::binary);
+                        if (!fb.SerializeToOstream(&output))
+                        {
+                            cerr << "Failed to write address book." << endl;
                         }
                     }
                     
@@ -595,6 +758,61 @@ void projectPortal(int userId)
             }
             if (optionToEdit == 5)
             {
+                int versionNo;
+                string versionContent;
+                for (int i = 0; i < fb.file_size(); i++)
+                {
+                    if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
+                    {
+                        for (int j = 0; j < fb.file(i).ver_size(); j++)
+                        {
+                            cout << fb.mutable_file(i)->mutable_ver(j)->DebugString() << endl;
+                        }
+                    }
+                }
+                cout << "Enter Version number to get reverted: ";
+                cin >> versionNo;
+
+
+                //option to revert to particular version
+                for (int i = 0; i < fb.file_size(); i++)
+                {
+                    if (fb.file(i).userid() == userId && fb.file(i).fileid() == fileId)
+                    {
+                        for (int j = 0; j < fb.file(i).ver_size(); j++)
+                        {
+                            if (fb.file(i).ver(j).versionno() == versionNo)
+                            {
+                                versionContent = fb.file(i).ver(j).filecontent();
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    break;
+                }
+
+                for (int i = 0; i < fpb.people_size(); i++)
+                {
+                    for (int j = 0; j < fpb.people(i).file_size(); j++)
+                    {
+                        if (fpb.people(i).userid() == userId && fpb.people(i).file(j).filename() == fileChoiceName)
+                        {
+                            fpb.mutable_people(i)->mutable_file(j)->set_filecontent(versionContent);
+
+                        }
+                    }
+                }
+
+                {
+                    fstream output("file.bin", ios::out | ios::trunc | ios::binary);
+                    if (!fpb.SerializeToOstream(&output))
+                    {
+                        cerr << "Failed to write address book." << endl;
+                    }
+                }
+
+
 
             }
             
@@ -602,6 +820,7 @@ void projectPortal(int userId)
 
     }
 }
+
 
 
 int main()
@@ -624,9 +843,11 @@ int main()
             return -1;
         }
     }
-    
+
+    //User Portal
     while (loginCheck)
     {
+        //Login Setup
         cout << "1) Sign up" << endl;
         cout << "2) Sign in" << endl;
         cin >> signCheck;
@@ -646,9 +867,11 @@ int main()
             
             for (int i = 0; i < password.length(); i++)
             {
-                password[i] = password[i] + 5;
+                password[i] = password[i] + 5;              //Encryption of password.
             }
 
+
+            //Validation for signup
             for (int i = 0; i < pb.people_size(); i++)
             {
                 if (pb.people(i).name() == name && pb.people(i).email() == email)
@@ -694,6 +917,7 @@ int main()
                 password[i] = password[i] + 5;
             }
 
+            //validation for signin
             for (int i = 0; i < pb.people_size(); i++)
             {
                 const login::Person& p = pb.people(i);
