@@ -68,9 +68,23 @@ void versionUpdate(string fileToUpdate, version::FileBook fb, version::Particula
     fileWriteVersion(fb);
 }
 
-void add()
+void displayContent(int peopleCounter, int fileCounter, textfile::FilePersonBook fpb)
 {
-
+    int count = 1;
+    for (int k = 0; k < fpb.people(peopleCounter).file(fileCounter).filecontent().length(); k++)
+    {
+        if ((fpb.people(peopleCounter).file(fileCounter).filecontent()[k] == '\n' || k == 0) && (fpb.people(peopleCounter).file(fileCounter).filecontent()[k + 1] != '\0'))
+        {
+            cout << endl;
+            cout << count << ")";
+            count += 1;
+        }
+        if (fpb.people(peopleCounter).file(fileCounter).filecontent()[k] != '\n')
+        {
+            cout << fpb.people(peopleCounter).file(fileCounter).filecontent()[k];
+        }
+    }
+    cout << "\n";
 }
 
 
@@ -219,7 +233,6 @@ void projectPortal(int userId)
             }
 
             //Once the user opens any of the project , have to show options to Add, update, remove and display the notepad content.
-
             cout << "1)Add" << endl;
             cout << "2)Update" << endl;
             cout << "3)Remove" << endl;
@@ -247,8 +260,6 @@ void projectPortal(int userId)
                 cout << "1) To overwrite a particular line" << endl;
                 cout << "2) To overwrite the entire document" << endl;
                 cin >> editChoice;
-
-
                 if (editChoice == 1)
                 {
                     string toUpdate;
@@ -260,21 +271,7 @@ void projectPortal(int userId)
                     int counter = 0;
                     string updatedS;
 
-                    for (int k = 0; k < fpb.people(peopleCounter).file(fileCounter).filecontent().length(); k++)
-                    {
-                        if ((fpb.people(peopleCounter).file(fileCounter).filecontent()[k] == '\n' || k == 0) && (fpb.people(peopleCounter).file(fileCounter).filecontent()[k + 1] != '\0'))
-                        {
-                            cout << endl;
-                            cout << count << ")";
-                            count += 1;
-                        }
-                        if (fpb.people(peopleCounter).file(fileCounter).filecontent()[k] != '\n')
-                        {
-                            cout << fpb.people(peopleCounter).file(fileCounter).filecontent()[k];
-                        }
-                    }
-                    cout << "\n";
-
+                    displayContent(peopleCounter, fileCounter, fpb);
 
                     cout << "Enter the line that needs to be changed: ";
                     cin >> line;
@@ -331,7 +328,6 @@ void projectPortal(int userId)
                 }
             }
 
-
             if (optionToEdit == 3)
             {
                 int editChoice;
@@ -349,21 +345,7 @@ void projectPortal(int userId)
                     int counter = 0;
                     string updatedS;
                     
-                    for (int k = 0; k < fpb.people(peopleCounter).file(fileCounter).filecontent().length(); k++)
-                    {
-                        if ((fpb.people(peopleCounter).file(fileCounter).filecontent()[k] == '\n' || k == 0) && (fpb.people(peopleCounter).file(fileCounter).filecontent()[k + 1] != '\0'))
-                        {
-                            cout << endl;
-                            cout << count << ")";
-                            count += 1;
-                        }
-
-                        if (fpb.people(peopleCounter).file(fileCounter).filecontent()[k] != '\n')
-                        {
-                            cout << fpb.people(peopleCounter).file(fileCounter).filecontent()[k];
-                        }
-                    }
-                    cout << "\n";
+                    displayContent(peopleCounter, fileCounter, fpb);
                                
                     cout << "Enter the line that needs to be removed: ";
                     cin >> line;
@@ -373,6 +355,7 @@ void projectPortal(int userId)
                     {
                         if (count == line - 1)
                         {
+                            //Skipping the particular line to remove it.
                         }
                         else
                         {
@@ -405,29 +388,13 @@ void projectPortal(int userId)
                 }
             }
 
-
             if (optionToEdit == 4)
             {
                 int count = 1;
-                
                 cout << "File Name: " << fileChoiceName << endl;
-                for (int k = 0; k < fpb.people(peopleCounter).file(fileCounter).filecontent().length(); k++)
-                {
-
-                    if ((fpb.people(peopleCounter).file(fileCounter).filecontent()[k] == '\n' || k == 0) && (fpb.people(peopleCounter).file(fileCounter).filecontent()[k + 1] != '\0'))
-                    {
-                        cout << endl;
-                        cout << count << ".";
-                        count += 1;
-                    }
-
-                    if (fpb.people(peopleCounter).file(fileCounter).filecontent()[k] != '\n')
-                    {
-                        cout << fpb.people(peopleCounter).file(fileCounter).filecontent()[k];
-                    }
-                }
-                cout << "\n";
+                displayContent(peopleCounter, fileCounter, fpb);
             }
+
             if (optionToEdit == 5)
             {
                 int versionNo;
@@ -490,6 +457,7 @@ int main()
         cout << "1) Sign up" << endl;
         cout << "2) Sign in" << endl;
         cin >> signCheck;
+        //sign Up part
         if (signCheck == 1)
         {
             string name, email, location, password;
@@ -538,7 +506,7 @@ int main()
                 }
             }
         }
-
+        //Sign in part.
         else
         {
             string email, password;
@@ -574,6 +542,5 @@ int main()
                 projectPortal(userId);
             }
         }
-    }
-    
+    }    
 }
