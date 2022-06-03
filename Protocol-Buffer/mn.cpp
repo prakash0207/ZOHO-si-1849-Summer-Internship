@@ -9,7 +9,6 @@
 
 using namespace std;
 
-
 void fileWriteVersion(version::FileBook fb)
 {
     fstream output("version.bin", ios::out | ios::trunc | ios::binary);
@@ -22,6 +21,7 @@ void fileWriteFile(textfile::FilePersonBook fpb)
     fpb.SerializeToOstream(&output);
 }
 
+//Function to write every version update in a separate file
 void versionUpdate(string fileToUpdate, version::FileBook fb, version::ParticularFile pf, version::ParticularFile::Version pfv, int userId, int fileId)
 {
     int operationNumber = 0;
@@ -68,6 +68,7 @@ void versionUpdate(string fileToUpdate, version::FileBook fb, version::Particula
     fileWriteVersion(fb);
 }
 
+//Function to display content in the file line by line
 void displayContent(int peopleCounter, int fileCounter, textfile::FilePersonBook fpb)
 {
     int count = 1;
@@ -95,7 +96,7 @@ void projectPortal(int userId)
     int projectPortalChoice;
     cout << "1)Create new Project" << endl;
     cout << "2)Open already created Project" << endl;
-    cin >> projectPortalChoice;
+    cin >> projectPortalChoice; 
     if (projectPortalChoice == 1)
     {
         string fileName;
@@ -124,7 +125,6 @@ void projectPortal(int userId)
         fp.set_userid(userId);
         fp1.set_userid(userId);
 
-      //  std::string* name = person.mutable_name();
         cout << "Enter The file name: ";
         cin >> fileName;
 
@@ -144,10 +144,15 @@ void projectPortal(int userId)
                 
             }
         }
-        cout << "New file is created (In new line type Q to exit):-" << endl;
-        cin.get();
-        getline(cin, fileContent, 'Q');
 
+        system("CLS");
+        cout << "New file is created" << endl;
+        cout << "Write the content Below" << endl;
+        cout << "Type 'Q' in new line to save and quit!!" << endl;
+        getline(cin, fileContent, 'Q');
+        system("CLS");
+
+        //Storing the content in separate file
         fileId = fileId + 1;
         fpp.set_fileid(fileId);
         fpp.set_filename(fileName);
@@ -155,6 +160,7 @@ void projectPortal(int userId)
         fp.add_file()->CopyFrom(fpp);
         fpb.add_people()->CopyFrom(fp);
 
+        //Storing the structure in separate file
         fpp1.set_fileid(fileId);
         fpp1.set_filename(fileName);
         fp1.add_file()->CopyFrom(fpp1);
@@ -231,7 +237,7 @@ void projectPortal(int userId)
                 fstream input("version.bin", ios::in | ios::binary);
                 fb.ParseFromIstream(&input);
             }
-
+            system("CLS");
             //Once the user opens any of the project , have to show options to Add, update, remove and display the notepad content.
             cout << "1)Add" << endl;
             cout << "2)Update" << endl;
@@ -324,7 +330,6 @@ void projectPortal(int userId)
                     fileWriteFile(fpb);
 
                     versionUpdate(toUpdate, fb, pf, pfv, userId, fileId);
-                                     
                 }
             }
 
@@ -393,6 +398,10 @@ void projectPortal(int userId)
                 int count = 1;
                 cout << "File Name: " << fileChoiceName << endl;
                 displayContent(peopleCounter, fileCounter, fpb);
+                cout << endl;
+                cout << "Press Enter to Continue" << endl;
+                cin.get();
+                cin.ignore();
             }
 
             if (optionToEdit == 5)
@@ -505,6 +514,10 @@ int main()
                     pb.SerializeToOstream(&output);
                 }
             }
+            cout << "Account created successfully! Press Enter" << endl;
+            cin.get();
+            cin.ignore();
+            system("CLS");
         }
         //Sign in part.
         else
@@ -539,6 +552,10 @@ int main()
             }
             if (loginCheck == false)
             {
+                cout << "Login Successful!(Press Enter)" << endl;
+                cin.get();
+                cin.ignore();
+                system("CLS");
                 projectPortal(userId);
             }
         }
